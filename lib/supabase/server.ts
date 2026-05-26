@@ -22,7 +22,10 @@ export async function supabaseServer() {
             cookieStore.set(name, value, options);
           });
         } catch {
-          // Called from a Server Component — middleware will refresh the session instead.
+          // Called from a Server Component where cookies are read-only.
+          // Cookies will be set on the next Server Action / Route Handler invocation
+          // instead — no separate middleware/proxy needed because the anonymous
+          // session is short-lived and re-bootstrapped client-side on every page load.
         }
       },
     },

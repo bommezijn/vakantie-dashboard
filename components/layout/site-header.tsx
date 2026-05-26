@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Heart, Plane, Users } from "lucide-react";
+import { Bookmark, Heart, Plane, Users } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { Button } from "@/components/ui/button";
 import { travelersParser } from "@/lib/search-params";
@@ -26,6 +26,12 @@ export function SiteHeader() {
           </div>
         </Link>
         <div className="flex items-center gap-3">
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/bookmarklet">
+              <Bookmark className="mr-1 size-4" />
+              Bookmarklet
+            </Link>
+          </Button>
           <Button asChild variant="ghost" size="sm">
             <Link href="/mijn-vakantie">
               <Heart className="mr-1 size-4" />

@@ -8,6 +8,7 @@ import { StatsBar } from "@/components/layout/stats-bar";
 import { FilterSidebar } from "@/components/filters/filter-sidebar";
 import { DealList } from "@/components/deals/deal-list";
 import { DealDetailSheet } from "@/components/deals/deal-detail-sheet";
+import { AddDealLinkForm } from "@/components/deals/add-deal-link-form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SearchHero } from "@/components/search/search-hero";
 import { WelcomeState } from "@/components/search/welcome-state";
@@ -71,6 +72,7 @@ export function DashboardShell({ initialResponse, rates }: DashboardShellProps) 
             {initialResponse && (
               <AgencyStatus agencies={initialResponse.agencies} />
             )}
+            <AddDealLinkForm />
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-[300px_1fr]">
               <aside className="lg:sticky lg:top-4 lg:h-[calc(100vh-6rem)]">
                 <ScrollArea className="lg:h-full">

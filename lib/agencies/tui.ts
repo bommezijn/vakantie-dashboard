@@ -1,7 +1,6 @@
-import type { Deal } from "@/types/deal";
 import type { SearchQuery } from "@/types/search";
-import type { AgencyAdapter } from "@/lib/agencies/types";
-import { filterSeedForProvider } from "@/lib/agencies/seed-filter";
+import type { AgencyAdapter, AgencySearchOutput } from "@/lib/agencies/types";
+import { liveOrSeed } from "@/lib/agencies/live-search";
 
 const COUNTRY_PATH: Record<string, string> = {
   Turkije: "turkije",
@@ -34,7 +33,7 @@ export const tuiAdapter: AgencyAdapter = {
     return `https://www.tui.nl/zonvakantie/zoeken/?${params}`;
   },
 
-  async search(query: SearchQuery, _signal: AbortSignal): Promise<Deal[]> {
-    return filterSeedForProvider("TUI", query);
+  async search(query: SearchQuery, signal: AbortSignal): Promise<AgencySearchOutput> {
+    return liveOrSeed("TUI", query, this.buildSearchUrl(query), signal);
   },
 };

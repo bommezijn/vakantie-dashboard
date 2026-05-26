@@ -1,6 +1,6 @@
 import type { SearchQuery } from "@/types/search";
-import type { AgencyAdapter } from "@/lib/agencies/types";
-import { filterSeedForProvider } from "@/lib/agencies/seed-filter";
+import type { AgencyAdapter, AgencySearchOutput } from "@/lib/agencies/types";
+import { liveOrSeed } from "@/lib/agencies/live-search";
 
 const COUNTRY_SLUG: Record<string, string> = {
   Turkije: "turkije",
@@ -36,7 +36,7 @@ export const vakantiediscounterAdapter: AgencyAdapter = {
     return `https://www.vakantiediscounter.nl/vakantie/?${params}`;
   },
 
-  async search(query: SearchQuery, _signal: AbortSignal) {
-    return filterSeedForProvider("Vakantiediscounter", query);
+  async search(query: SearchQuery, signal: AbortSignal): Promise<AgencySearchOutput> {
+    return liveOrSeed("Vakantiediscounter", query, this.buildSearchUrl(query), signal);
   },
 };

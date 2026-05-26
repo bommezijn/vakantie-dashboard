@@ -15,6 +15,9 @@ export interface AgencyResult {
   count: number;
   durationMs: number;
   message?: string;
+  /** The URL the adapter searched on — surfaced to the UI so the user can
+   *  open the provider's own search page when live scraping fails. */
+  searchUrl?: string;
 }
 
 export interface SearchResponse {

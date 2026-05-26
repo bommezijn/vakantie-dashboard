@@ -1,7 +1,6 @@
-import type { Deal } from "@/types/deal";
 import type { SearchQuery } from "@/types/search";
-import type { AgencyAdapter } from "@/lib/agencies/types";
-import { filterSeedForProvider } from "@/lib/agencies/seed-filter";
+import type { AgencyAdapter, AgencySearchOutput } from "@/lib/agencies/types";
+import { liveOrSeed } from "@/lib/agencies/live-search";
 
 export const byJuneAdapter: AgencyAdapter = {
   provider: "ByJune",
@@ -18,7 +17,7 @@ export const byJuneAdapter: AgencyAdapter = {
     return `https://byjune.nl/zomer-2026?${params}`;
   },
 
-  async search(query: SearchQuery, _signal: AbortSignal): Promise<Deal[]> {
-    return filterSeedForProvider("ByJune", query);
+  async search(query: SearchQuery, signal: AbortSignal): Promise<AgencySearchOutput> {
+    return liveOrSeed("ByJune", query, this.buildSearchUrl(query), signal);
   },
 };

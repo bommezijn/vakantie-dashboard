@@ -22,7 +22,7 @@ export const agencies: AgencyAdapter[] = [
   vakantiediscounterAdapter,
 ];
 
-const SEARCH_TIMEOUT_MS = 5_000;
+const SEARCH_TIMEOUT_MS = 8_000;
 
 export async function runAgencySearch(
   query: SearchQuery
@@ -44,16 +44,20 @@ async function runOne(
   const started = Date.now();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), SEARCH_TIMEOUT_MS);
+  const searchUrl = safeBuildUrl(adapter, query);
 
   try {
-    const deals = await adapter.search(query, controller.signal);
+    const output = await adapter.search(query, controller.signal);
+    const status = output.fallback ? "fallback" : "ok";
     return {
-      deals,
+      deals: output.deals,
       result: {
         provider: adapter.provider,
-        status: "ok",
-        count: deals.length,
+        status,
+        count: output.deals.length,
         durationMs: Date.now() - started,
+        message: output.message,
+        searchUrl,
       },
     };
   } catch (err) {
@@ -66,10 +70,19 @@ async function runOne(
         count: 0,
         durationMs: Date.now() - started,
         message,
+        searchUrl,
       },
     };
   } finally {
     clearTimeout(timer);
+  }
+}
+
+function safeBuildUrl(adapter: AgencyAdapter, query: SearchQuery): string | undefined {
+  try {
+    return adapter.buildSearchUrl(query);
+  } catch {
+    return adapter.homepage;
   }
 }
 

@@ -1,17 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Inlined in plaats van import uit lib/supabase/middleware omdat Vercel's
-// Edge bundler de @/ path-alias niet resolvet bij middleware-builds.
-//
-// Database typing wordt hier weggelaten — de middleware roept alleen
-// supabase.auth.getUser() aan om de session-cookies te refreshen, geen
-// queries die typing nodig hebben.
+// Next.js 16 hernoemde "middleware" naar "proxy" — zelfde functionaliteit,
+// nieuwe naam. De oude middleware.ts convention is deprecated en lijkt
+// runtime-bugs te hebben op Vercel's Edge (MIDDLEWARE_INVOCATION_FAILED
+// op module init, vóór de functie zelf draait).
 //
 // Alle supabase-interactie staat in een try/catch zodat een fout in
-// session refresh nooit de hele site neerhaalt (de matcher raakt alle
-// routes — een crash hier = 500 op iedere request).
-export async function middleware(request: NextRequest) {
+// session refresh nooit alle requests met 500 platlegt.
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -38,10 +35,10 @@ export async function middleware(request: NextRequest) {
 
     await supabase.auth.getUser();
   } catch (err) {
-    // Log maar laat de request doorgaan — middleware crash mag nooit de site
+    // Log maar laat de request doorgaan — proxy crash mag nooit de site
     // platleggen. Worst case: cookies worden niet ge-refreshed en de user
     // moet opnieuw aanmelden bij de volgende interactie.
-    console.error("[middleware] supabase session refresh failed:", err);
+    console.error("[proxy] supabase session refresh failed:", err);
   }
 
   return response;

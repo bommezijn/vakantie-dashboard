@@ -3,6 +3,8 @@ import { sunwebAdapter } from "@/lib/agencies/sunweb";
 import { tuiAdapter } from "@/lib/agencies/tui";
 import { corendonAdapter } from "@/lib/agencies/corendon";
 import { byJuneAdapter } from "@/lib/agencies/byjune";
+import { prijsvrijAdapter } from "@/lib/agencies/prijsvrij";
+import { vakantiediscounterAdapter } from "@/lib/agencies/vakantiediscounter";
 import type { AgencyAdapter } from "@/lib/agencies/types";
 import type { Deal } from "@/types/deal";
 import type {
@@ -16,6 +18,8 @@ export const agencies: AgencyAdapter[] = [
   tuiAdapter,
   corendonAdapter,
   byJuneAdapter,
+  prijsvrijAdapter,
+  vakantiediscounterAdapter,
 ];
 
 const SEARCH_TIMEOUT_MS = 5_000;

@@ -17,7 +17,7 @@ const STEPS = [
   {
     icon: Wallet,
     title: "Vergelijk agencies",
-    text: "Sunweb, TUI, Corendon en ByJune in één overzicht.",
+    text: "Sunweb, TUI, Corendon, ByJune, Prijsvrij en Vakantiediscounter tegelijk.",
   },
   {
     icon: Tags,

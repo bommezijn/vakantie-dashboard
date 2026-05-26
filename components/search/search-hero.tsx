@@ -88,7 +88,7 @@ export function SearchHero({ initial, compact = false }: SearchHeroProps) {
             Vind je vakantie voor juli 2026
           </h2>
           <p className="text-sm text-muted-foreground">
-            We doorzoeken Sunweb, TUI, Corendon en ByJune.
+            We doorzoeken Sunweb, TUI, Corendon, ByJune, Prijsvrij en Vakantiediscounter.
           </p>
         </div>
       )}

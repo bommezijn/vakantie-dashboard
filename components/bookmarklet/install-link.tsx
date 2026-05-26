@@ -16,9 +16,11 @@ import { Bookmark } from "lucide-react";
  *  4. Opens /voeg-toe on this app with all fields as query params
  */
 function buildBookmarklet(origin: string): string {
-  // Keep this minified — bookmark managers truncate long URLs in some browsers.
-  // The placeholder __ORIGIN__ is replaced at the very end.
-  const source = `void function(){var m=function(p,a){var e=document.querySelector('meta[property="'+p+'"]')||document.querySelector('meta[name="'+p+'"]');return e?e.getAttribute(a||'content'):''};var t=m('og:title')||document.title.replace(/\\s*[|\\-–—].*$/,'').trim(),i=m('og:image')||'',d=m('og:description')||m('description')||'',u=m('og:url')||location.href,p='',re=/€\\s?(\\d{1,3}(?:[.,]\\d{3})*(?:[.,]\\d{2})?)/g,b=(document.body.innerText||'').slice(0,8000),ma=re.exec(b);if(ma)p=ma[1].replace(/\\./g,'').replace(',','.');var h=location.hostname.replace(/^www\\./,''),pr='Anders';if(/tui/.test(h))pr='TUI';else if(/sunweb/.test(h))pr='Sunweb';else if(/corendon/.test(h))pr='Corendon';else if(/byjune/.test(h))pr='ByJune';else if(/prijsvrij/.test(h))pr='Prijsvrij';else if(/vakantiediscounter/.test(h))pr='Vakantiediscounter';var qs=new URLSearchParams({url:u,title:t,image:i,description:d,price:p,provider:pr});window.open('__ORIGIN__/voeg-toe?'+qs.toString(),'_blank')}()`;
+  // Try/catch met visible alert — anders crashen we silent en zie je niks.
+  // Fallback naar same-tab als window.open geblokt wordt (popup-blocker bij
+  // bookmarklets is meestal silent; geen icoontje, geen melding).
+  // __ORIGIN__ wordt vervangen door de huidige host.
+  const source = `void function(){try{var m=function(p,a){var e=document.querySelector('meta[property="'+p+'"]')||document.querySelector('meta[name="'+p+'"]');return e?e.getAttribute(a||'content'):''};var t=m('og:title')||document.title.replace(/\\s*[|\\-–—].*$/,'').trim(),i=m('og:image')||'',d=m('og:description')||m('description')||'',u=m('og:url')||location.href,p='',re=/€\\s?(\\d{1,3}(?:[.,]\\d{3})*(?:[.,]\\d{2})?)/g,b=(document.body.innerText||'').slice(0,8000),ma=re.exec(b);if(ma)p=ma[1].replace(/\\./g,'').replace(',','.');var h=location.hostname.replace(/^www\\./,''),pr='Anders';if(/tui/.test(h))pr='TUI';else if(/sunweb/.test(h))pr='Sunweb';else if(/corendon/.test(h))pr='Corendon';else if(/byjune/.test(h))pr='ByJune';else if(/prijsvrij/.test(h))pr='Prijsvrij';else if(/vakantiediscounter/.test(h))pr='Vakantiediscounter';var qs=new URLSearchParams({url:u,title:t,image:i,description:d,price:p,provider:pr});var target='__ORIGIN__/voeg-toe?'+qs.toString();var w=window.open(target,'_blank');if(!w){if(confirm('Pop-up geblokkeerd. In dit tabblad openen?\\\\n\\\\nTitel: '+t+'\\\\nPrijs: '+(p||'(geen)')))location.href=target}}catch(e){alert('Vakantieplanner bookmarklet: '+e.message)}}()`;
 
   return `javascript:${source.replace("__ORIGIN__", origin)}`;
 }

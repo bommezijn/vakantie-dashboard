@@ -6,10 +6,9 @@ import {
   parseAsStringEnum,
 } from "nuqs";
 import type { SortKey } from "@/types/deal";
+import { DEFAULT_BUDGET, DEFAULT_SORT, DEFAULT_TRAVELERS } from "@/lib/defaults";
 
-export const DEFAULT_BUDGET = 800;
-export const DEFAULT_TRAVELERS = 3;
-export const DEFAULT_SORT: SortKey = "price-asc";
+export { DEFAULT_BUDGET, DEFAULT_TRAVELERS, DEFAULT_SORT };
 
 const SORT_KEYS: SortKey[] = [
   "price-asc",
@@ -47,6 +46,10 @@ export const sortParser = parseAsStringEnum(SORT_KEYS)
   .withDefault(DEFAULT_SORT)
   .withOptions({ clearOnDefault: true });
 
+export const searchedParser = parseAsBoolean
+  .withDefault(false)
+  .withOptions({ clearOnDefault: true });
+
 export const dealParser = parseAsString;
 
 export const filterParsers = {
@@ -57,4 +60,5 @@ export const filterParsers = {
   countries: countriesParser,
   showOverBudget: showOverBudgetParser,
   sort: sortParser,
+  searched: searchedParser,
 };

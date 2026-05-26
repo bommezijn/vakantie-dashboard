@@ -1,4 +1,10 @@
-export type Provider = "TUI" | "Sunweb" | "Corendon" | "ByJune" | "Anders";
+export type Provider =
+  | "TUI"
+  | "Sunweb"
+  | "Corendon"
+  | "ByJune"
+  | "Prijsvrij"
+  | "Vakantiediscounter";
 
 export type DealType =
   | "villa"

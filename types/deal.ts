@@ -42,6 +42,8 @@ export interface Deal {
   keywords: string[];
   description: string;
   highlights: string[];
+  source?: "curated" | "user";
+  imageUrl?: string | null;
 }
 
 export type SortKey =

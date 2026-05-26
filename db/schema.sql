@@ -1,5 +1,11 @@
 -- Vakantieplanner schema voor Supabase Postgres
--- Run in de Supabase SQL editor (of via Supabase MCP).
+-- ⚠️  Superseded by tracked migrations — see `mcp__supabase__list_migrations`.
+-- This file is kept for GitHub-lezers context only; do NOT re-apply.
+-- Current authoritative migrations:
+--   0001_initial_deals_schema
+--   0002_revoke_rls_auto_enable_execute
+--   0003_vacation_plans_and_activities
+--   0004_user_submitted_deals_columns_and_policies
 
 create table if not exists public.deals (
   id text primary key,

@@ -41,7 +41,3 @@ export function sortDeals(deals: Deal[], sortBy: SortKey): Deal[] {
 export function uniqueProviders(deals: Deal[]): string[] {
   return Array.from(new Set(deals.map((d) => d.provider))).sort();
 }
-
-export function uniqueCountries(deals: Deal[]): string[] {
-  return Array.from(new Set(deals.map((d) => d.country))).sort();
-}

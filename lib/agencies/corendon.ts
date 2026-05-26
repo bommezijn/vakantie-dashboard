@@ -32,7 +32,7 @@ export const corendonAdapter: AgencyAdapter = {
     return `https://www.corendon.nl/zoeken?${params}`;
   },
 
-  async search(query: SearchQuery): Promise<Deal[]> {
+  async search(query: SearchQuery, _signal: AbortSignal): Promise<Deal[]> {
     return filterSeedForProvider("Corendon", query);
   },
 };

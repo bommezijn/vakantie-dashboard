@@ -18,7 +18,7 @@ export const byJuneAdapter: AgencyAdapter = {
     return `https://byjune.nl/zomer-2026?${params}`;
   },
 
-  async search(query: SearchQuery): Promise<Deal[]> {
+  async search(query: SearchQuery, _signal: AbortSignal): Promise<Deal[]> {
     return filterSeedForProvider("ByJune", query);
   },
 };

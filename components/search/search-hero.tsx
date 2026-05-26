@@ -145,7 +145,10 @@ export function SearchHero({ initial, compact = false }: SearchHeroProps) {
               max={5000}
               step={50}
               value={budget}
-              onChange={(e) => setBudget(parseInt(e.target.value, 10) || 0)}
+              onChange={(e) => {
+                const n = parseInt(e.target.value, 10);
+                if (!isNaN(n) && n > 0) setBudget(n);
+              }}
               className="h-10 border-0 pl-4 text-base shadow-none focus-visible:ring-0"
             />
           </div>

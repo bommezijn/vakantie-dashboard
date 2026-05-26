@@ -34,7 +34,7 @@ export const tuiAdapter: AgencyAdapter = {
     return `https://www.tui.nl/zonvakantie/zoeken/?${params}`;
   },
 
-  async search(query: SearchQuery): Promise<Deal[]> {
+  async search(query: SearchQuery, _signal: AbortSignal): Promise<Deal[]> {
     return filterSeedForProvider("TUI", query);
   },
 };

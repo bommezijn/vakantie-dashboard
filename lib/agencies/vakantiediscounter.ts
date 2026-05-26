@@ -36,7 +36,7 @@ export const vakantiediscounterAdapter: AgencyAdapter = {
     return `https://www.vakantiediscounter.nl/vakantie/?${params}`;
   },
 
-  async search(query: SearchQuery) {
+  async search(query: SearchQuery, _signal: AbortSignal) {
     return filterSeedForProvider("Vakantiediscounter", query);
   },
 };

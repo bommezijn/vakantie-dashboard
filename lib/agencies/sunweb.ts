@@ -36,7 +36,7 @@ export const sunwebAdapter: AgencyAdapter = {
     return `https://www.sunweb.nl/zoeken?${params}`;
   },
 
-  async search(query: SearchQuery): Promise<Deal[]> {
+  async search(query: SearchQuery, _signal: AbortSignal): Promise<Deal[]> {
     return filterSeedForProvider("Sunweb", query);
   },
 };

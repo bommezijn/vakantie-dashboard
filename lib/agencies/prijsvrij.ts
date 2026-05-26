@@ -35,7 +35,7 @@ export const prijsvrijAdapter: AgencyAdapter = {
     return `https://www.prijsvrij.nl/reizen/?${params}`;
   },
 
-  async search(query: SearchQuery) {
+  async search(query: SearchQuery, _signal: AbortSignal) {
     return filterSeedForProvider("Prijsvrij", query);
   },
 };

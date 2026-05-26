@@ -1,7 +1,9 @@
 import { Suspense } from "react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { runAgencySearch } from "@/lib/agencies";
+import { getRates } from "@/lib/currency";
 import { DEFAULT_BUDGET, DEFAULT_TRAVELERS } from "@/lib/defaults";
+import type { Rates } from "@/lib/currency";
 import type { SearchResponse } from "@/types/search";
 
 type PageSearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -15,26 +17,23 @@ export default async function Home({
   const searched = params.searched === "true" || params.searched === "1";
 
   let response: SearchResponse | null = null;
+  let rates: Rates = {};
+
   if (searched) {
-    response = await runAgencySearch({
-      countries: parseList(params.countries),
-      travelers: parseNumber(params.travelers, DEFAULT_TRAVELERS),
-      maxBudget: parseNumber(params.budget, DEFAULT_BUDGET),
-      keywords: parseList(params.keywords),
-    });
+    [response, rates] = await Promise.all([
+      runAgencySearch({
+        countries: parseList(params.countries),
+        travelers: parseNumber(params.travelers, DEFAULT_TRAVELERS),
+        maxBudget: parseNumber(params.budget, DEFAULT_BUDGET),
+        keywords: parseList(params.keywords),
+      }),
+      getRates(),
+    ]);
   }
 
   return (
     <Suspense>
-      <DashboardShell initialResponse={response} />
-import { getDeals } from "@/lib/data";
-import { getRates } from "@/lib/currency";
-
-export default async function Home() {
-  const [deals, rates] = await Promise.all([getDeals(), getRates()]);
-  return (
-    <Suspense>
-      <DashboardShell deals={deals} rates={rates} />
+      <DashboardShell initialResponse={response} rates={rates} />
     </Suspense>
   );
 }

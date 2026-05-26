@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useQueryState } from "nuqs";
-import { Plane, MapPin, Star } from "lucide-react";
+import { Plane, MapPin, Star, PenLine } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -29,21 +30,47 @@ export function DealCard({ deal, travelers, maxBudget }: DealCardProps) {
   const totalPrice = deal.pricePerPerson * travelers;
   const within = deal.pricePerPerson <= maxBudget;
   const margin = maxBudget - deal.pricePerPerson;
+  const isUserDeal = deal.source === "user";
+  // Normalize protocol-relative URLs (//...) that some CDNs emit — Next/Image requires https://
+  const imageUrl = deal.imageUrl?.startsWith("//") ? `https:${deal.imageUrl}` : deal.imageUrl;
 
   return (
     <Card
       onClick={() => setSelected(deal.id)}
       className={cn(
         "group cursor-pointer gap-0 overflow-hidden p-0 transition-all hover:shadow-md hover:-translate-y-0.5",
-        !within && "opacity-70"
+        !within && "opacity-70",
+        isUserDeal && "border-l-[3px] border-l-[#e8fd94]"
       )}
     >
+      {/* Image strip — shown for user deals with an imageUrl */}
+      {isUserDeal && imageUrl && (
+        <div className="relative h-28 w-full overflow-hidden">
+          <Image
+            src={imageUrl}
+            alt={deal.title}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+          />
+          {/* Gradient overlay so text below remains readable */}
+          <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
+        </div>
+      )}
+
       <div className="flex items-start justify-between gap-3 p-4 pb-3">
         <div className="min-w-0 flex-1">
-          <div className="mb-1.5 flex items-center gap-2">
-            <Badge variant="outline" className="text-[10px] font-medium">
-              {deal.provider}
-            </Badge>
+          <div className="mb-1.5 flex flex-wrap items-center gap-2">
+            {isUserDeal ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#e8fd94] px-2 py-0.5 text-[10px] font-semibold text-[#1a2d5a]">
+                <PenLine className="size-2.5" />
+                Eigen deal
+              </span>
+            ) : (
+              <Badge variant="outline" className="text-[10px] font-medium">
+                {deal.provider}
+              </Badge>
+            )}
             <Badge
               variant="secondary"
               className={cn("text-[10px] font-medium", TYPE_VARIANTS[deal.type])}
@@ -58,22 +85,27 @@ export function DealCard({ deal, travelers, maxBudget }: DealCardProps) {
           </p>
         </div>
         <div className="text-right">
-          <p className="text-lg font-bold tabular-nums">
+          <p className={cn("text-lg font-bold tabular-nums", isUserDeal && "text-[#2b438d] dark:text-[#94adff]")}>
             {formatPrice(deal.pricePerPerson)}
           </p>
           <p className="text-[10px] text-muted-foreground">per persoon</p>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t bg-muted/30 px-4 py-2 text-xs text-muted-foreground">
+      <div className={cn(
+        "flex flex-wrap items-center gap-x-3 gap-y-1 border-t px-4 py-2 text-xs text-muted-foreground",
+        isUserDeal ? "bg-[#e8fd94]/10" : "bg-muted/30"
+      )}>
         <span className="flex items-center gap-1">
           <Plane className="size-3" />
           {deal.flightTime}
         </span>
-        <span className="flex items-center gap-1">
-          <Star className="size-3 fill-amber-400 text-amber-400" />
-          {deal.rating.toFixed(1)}
-        </span>
+        {deal.rating > 0 && (
+          <span className="flex items-center gap-1">
+            <Star className="size-3 fill-amber-400 text-amber-400" />
+            {deal.rating.toFixed(1)}
+          </span>
+        )}
         <span>{deal.duration}d</span>
         <span className="ml-auto tabular-nums">
           {travelers}p · {formatPrice(totalPrice)}

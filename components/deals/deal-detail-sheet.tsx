@@ -14,18 +14,27 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { dealParser } from "@/lib/search-params";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatLocal } from "@/lib/format";
+import { convertFromEur, currencyForCountry, type Rates } from "@/lib/currency";
+import { MakeVacationButton } from "@/components/deals/make-vacation-button";
 import type { Deal } from "@/types/deal";
 
 interface DealDetailSheetProps {
   deals: Deal[];
   travelers: number;
+  rates: Rates;
 }
 
-export function DealDetailSheet({ deals, travelers }: DealDetailSheetProps) {
+export function DealDetailSheet({ deals, travelers, rates }: DealDetailSheetProps) {
   const [selectedId, setSelected] = useQueryState("deal", dealParser);
   const deal = selectedId ? deals.find((d) => d.id === selectedId) : null;
   const open = Boolean(deal);
+
+  const localCurrency = deal ? currencyForCountry(deal.country) : null;
+  const localAmount =
+    deal && localCurrency
+      ? convertFromEur(deal.pricePerPerson, localCurrency, rates)
+      : null;
 
   return (
     <Sheet open={open} onOpenChange={(o) => !o && setSelected(null)}>
@@ -54,6 +63,11 @@ export function DealDetailSheet({ deals, travelers }: DealDetailSheetProps) {
                   </strong>
                 </span>
               </div>
+              {localAmount != null && localCurrency && (
+                <p className="text-xs text-muted-foreground">
+                  ≈ {formatLocal(localAmount, localCurrency)} ter plaatse
+                </p>
+              )}
             </SheetHeader>
 
             <ScrollArea className="flex-1">
@@ -122,7 +136,8 @@ export function DealDetailSheet({ deals, travelers }: DealDetailSheetProps) {
               </div>
             </ScrollArea>
 
-            <div className="border-t bg-background p-4">
+            <div className="space-y-2 border-t bg-background p-4">
+              <MakeVacationButton dealId={deal.id} dealTitle={deal.title} />
               <Button asChild className="w-full">
                 <a href={deal.providerUrl} target="_blank" rel="noopener noreferrer">
                   Bekijk op {deal.provider}

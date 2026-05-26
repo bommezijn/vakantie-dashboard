@@ -1,4 +1,4 @@
-export type Provider = "TUI" | "Sunweb" | "Corendon" | "ByJune";
+export type Provider = "TUI" | "Sunweb" | "Corendon" | "ByJune" | "Anders";
 
 export type DealType =
   | "villa"
@@ -36,6 +36,8 @@ export interface Deal {
   keywords: string[];
   description: string;
   highlights: string[];
+  source?: "curated" | "user";
+  imageUrl?: string | null;
 }
 
 export type SortKey =

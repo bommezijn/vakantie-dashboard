@@ -17,6 +17,7 @@ import { dealParser } from "@/lib/search-params";
 import { formatPrice, formatLocal } from "@/lib/format";
 import { convertFromEur, currencyForCountry, type Rates } from "@/lib/currency";
 import { MakeVacationButton } from "@/components/deals/make-vacation-button";
+import { DeleteDealButton } from "@/components/deals/delete-deal-button";
 import type { Deal } from "@/types/deal";
 
 interface DealDetailSheetProps {
@@ -144,6 +145,9 @@ export function DealDetailSheet({ deals, travelers, rates }: DealDetailSheetProp
                   <ExternalLink className="ml-2 size-4" />
                 </a>
               </Button>
+              {deal.ownedByMe && (
+                <DeleteDealButton dealId={deal.id} dealTitle={deal.title} />
+              )}
             </div>
           </>
         )}

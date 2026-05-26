@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useQueryState } from "nuqs";
-import { Plane, MapPin, Star, PenLine } from "lucide-react";
+import { Plane, MapPin, Star, PenLine, Bookmark, Link2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -61,12 +61,7 @@ export function DealCard({ deal, travelers, maxBudget }: DealCardProps) {
       <div className="flex items-start justify-between gap-3 p-4 pb-3">
         <div className="min-w-0 flex-1">
           <div className="mb-1.5 flex flex-wrap items-center gap-2">
-            {isUserDeal ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-[#e8fd94] px-2 py-0.5 text-[10px] font-semibold text-[#1a2d5a]">
-                <PenLine className="size-2.5" />
-                Eigen deal
-              </span>
-            ) : (
+            {isUserDeal ? <UserSourceBadge createdVia={deal.createdVia} /> : (
               <Badge variant="outline" className="text-[10px] font-medium">
                 {deal.provider}
               </Badge>
@@ -121,5 +116,36 @@ export function DealCard({ deal, travelers, maxBudget }: DealCardProps) {
         )}
       </div>
     </Card>
+  );
+}
+
+/**
+ * Per-source pill voor user-deals. Drie varianten:
+ *  - Bookmarklet → 1-click vanuit een vakantiesite
+ *  - Link-paste → user plakte een URL in het AddDealLinkForm
+ *  - Manual     → user vulde alles handmatig in (default)
+ */
+function UserSourceBadge({ createdVia }: { createdVia?: Deal["createdVia"] }) {
+  if (createdVia === "bookmarklet") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-[#94adff] px-2 py-0.5 text-[10px] font-semibold text-[#1a2d5a]">
+        <Bookmark className="size-2.5" />
+        Via bookmarklet
+      </span>
+    );
+  }
+  if (createdVia === "link-paste") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-[#e8fd94] px-2 py-0.5 text-[10px] font-semibold text-[#1a2d5a]">
+        <Link2 className="size-2.5" />
+        Via link
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-[#e8fd94] px-2 py-0.5 text-[10px] font-semibold text-[#1a2d5a]">
+      <PenLine className="size-2.5" />
+      Eigen
+    </span>
   );
 }

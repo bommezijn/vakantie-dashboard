@@ -122,6 +122,7 @@ export function AddDealLinkForm() {
           startDate: get("startDate"),
           flightTime: get("flightTime") || "—",
           imageUrl: get("imageUrl") || undefined,
+          createdVia: "link-paste",
         });
         toast.success("Deal toegevoegd");
         setOpen(false);

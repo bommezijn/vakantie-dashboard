@@ -10,19 +10,22 @@ export async function getDeals(): Promise<Deal[]> {
   const supabase = await supabaseServer();
   if (!supabase) return seedDeals;
 
-  const { data, error } = await supabase
-    .from("deals")
-    .select("*")
-    .order("price_per_person", { ascending: true });
+  // Single round-trip — fetch deals and current user in parallel so we can
+  // mark `ownedByMe` for the delete-button UI without a second auth call.
+  const [{ data, error }, { data: userData }] = await Promise.all([
+    supabase.from("deals").select("*").order("price_per_person", { ascending: true }),
+    supabase.auth.getUser(),
+  ]);
 
   if (error || !data) return seedDeals;
 
-  return data.map(rowToDeal);
+  const myId = userData.user?.id ?? null;
+  return data.map((row) => rowToDeal(row, myId));
 }
 
 // Runtime trust: provider/type/catering string columns are constrained at write-time
 // (seed script + future INSERT policy) to the literal unions in types/deal.ts.
-function rowToDeal(row: DealRow): Deal {
+function rowToDeal(row: DealRow, currentUserId: string | null): Deal {
   return {
     id: row.id,
     title: row.title,
@@ -45,5 +48,7 @@ function rowToDeal(row: DealRow): Deal {
     highlights: row.highlights,
     source: (row.source ?? "curated") as Deal["source"],
     imageUrl: row.image_url ?? null,
+    createdVia: (row.created_via ?? "manual") as Deal["createdVia"],
+    ownedByMe: currentUserId !== null && row.submitted_by === currentUserId,
   };
 }

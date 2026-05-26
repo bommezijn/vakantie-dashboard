@@ -44,6 +44,11 @@ export interface Deal {
   highlights: string[];
   source?: "curated" | "user";
   imageUrl?: string | null;
+  /** How the deal entered the system. Lets the UI badge per-source. */
+  createdVia?: "curated" | "bookmarklet" | "link-paste" | "manual";
+  /** True when the current user owns the deal — controls whether the
+   *  delete action shows. Set in the server-side mapper. */
+  ownedByMe?: boolean;
 }
 
 export type SortKey =

@@ -18,6 +18,8 @@ export interface CreateUserDealInput {
   startDate: string;
   flightTime: string;
   imageUrl?: string;
+  /** How the deal was added — drives the badge in the UI. */
+  createdVia?: "bookmarklet" | "link-paste" | "manual";
 }
 
 export async function createUserDeal(input: CreateUserDealInput) {
@@ -55,9 +57,35 @@ export async function createUserDeal(input: CreateUserDealInput) {
     highlights: [],
     source: "user",
     submitted_by: userData.user.id,
+    created_via: input.createdVia ?? "manual",
   });
 
   if (error) throw new Error(error.message);
+
+  revalidatePath("/");
+  return { id };
+}
+
+export async function deleteUserDeal(id: string) {
+  const supabase = await supabaseServer();
+  if (!supabase) throw new Error("Supabase not configured");
+
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Niet ingelogd");
+
+  // RLS-policy "users can delete their own deals" filtert al op
+  // source='user' AND submitted_by=auth.uid(), maar we voegen de eq()
+  // filters expliciet toe als extra veiligheid (defense in depth).
+  const { error, count } = await supabase
+    .from("deals")
+    .delete({ count: "exact" })
+    .eq("id", id)
+    .eq("source", "user")
+    .eq("submitted_by", userData.user.id);
+
+  if (error) throw new Error(error.message);
+  if (count === 0)
+    throw new Error("Deal niet gevonden of niet door jou aangemaakt");
 
   revalidatePath("/");
   return { id };

@@ -71,6 +71,7 @@ export function QuickAddDealForm({ initial }: QuickAddDealFormProps) {
           startDate: get("startDate"),
           flightTime: get("flightTime") || "—",
           imageUrl: get("imageUrl") || undefined,
+          createdVia: "bookmarklet",
         });
         toast.success("Deal toegevoegd");
         router.push("/?searched=true");

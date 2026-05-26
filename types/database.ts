@@ -20,6 +20,7 @@ export type Database = {
           catering: string;
           country: string;
           created_at: string | null;
+          created_via: string;
           description: string;
           destination: string;
           duration: number;
@@ -46,6 +47,7 @@ export type Database = {
           catering: string;
           country: string;
           created_at?: string | null;
+          created_via?: string;
           description: string;
           destination: string;
           duration: number;
@@ -72,6 +74,7 @@ export type Database = {
           catering?: string;
           country?: string;
           created_at?: string | null;
+          created_via?: string;
           description?: string;
           destination?: string;
           duration?: number;

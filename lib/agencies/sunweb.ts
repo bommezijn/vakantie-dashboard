@@ -2,15 +2,20 @@ import type { SearchQuery } from "@/types/search";
 import type { AgencyAdapter, AgencySearchOutput } from "@/lib/agencies/types";
 import { liveOrSeed } from "@/lib/agencies/live-search";
 
-// Sunweb gebruikt interne numerieke IDs per land — geen slugs. Deze mapping
-// is groeiend; ontbrekende landen worden gewoon weggelaten, Sunweb toont
-// dan alle landen die binnen de andere filters passen.
-//
-// Hoe nieuwe IDs vinden: doe een handmatige zoekopdracht op sunweb.nl en
-// kopieer de Country[0]=X uit de URL.
+// Sunweb gebruikt interne numerieke IDs per land — geen slugs. Mapping
+// gevonden door handmatig zoeken op sunweb.nl en de Country[0]=X uit de URL
+// te kopiëren. Onbekende landen worden weggelaten — Sunweb toont dan
+// alle landen die binnen de andere filters passen.
 const COUNTRY_ID: Record<string, number> = {
+  Bulgarije: 4,
+  Egypte: 11,
   Griekenland: 16,
-  // TODO: aanvullen voor Turkije, Spanje, Portugal, Italië, Kroatië, Cyprus, etc.
+  Italie: 20,
+  Oostenrijk: 2,
+  Portugal: 27,
+  Spanje: 12,
+  Tunesie: 28,
+  Turkije: 29,
 };
 
 // Synthetische volwassen-geboortedatum — Sunweb berekent leeftijden hieruit
@@ -20,6 +25,25 @@ const ADULT_DOB = "1996-05-26";
 const DEPARTURE_DATE = "2026-07-01";
 const DURATION_RANGE = "8-11";
 
+// Mapping van onze DealType (uit types/deal.ts) naar Sunweb's AccommodationType
+// codes. Voor "all-inclusive" gebruiken we HOTEL + Mealplan=AI (zie hieronder).
+const ACCOMMODATION_TYPE: Record<string, string> = {
+  hotel: "HOTEL",
+  appartement: "APARTMENT",
+  aparthotel: "APARTHOTEL",
+  villa: "HOTEL", // Sunweb categoriseert villa's onder hotels
+};
+
+// Mapping voor catering — Sunweb gebruikt:
+//   AI = all-inclusive, UA = ultra all-inclusive, HP = half-pension,
+//   FB = volpension, OB = ontbijt, RO = logies
+const MEALPLAN: Record<string, string> = {
+  "all-inclusive": "AI",
+  halfpension: "HP",
+  ontbijt: "OB",
+  logies: "RO",
+};
+
 export const sunwebAdapter: AgencyAdapter = {
   provider: "Sunweb",
   label: "Sunweb",
@@ -27,23 +51,27 @@ export const sunwebAdapter: AgencyAdapter = {
 
   /**
    * Bouwt een URL in het echte Sunweb-formaat zoals te zien na een handmatige
-   * zoekopdracht. Vierkante haken blijven letterlijk (Sunweb verwacht ze
-   * onge-encoded) dus we bouwen de query-string handmatig in plaats van via
-   * URLSearchParams (die [ en ] encodeert naar %5B/%5D).
+   * zoekopdracht. Vierkante haken blijven letterlijk (Sunweb accepteert beide,
+   * maar zonder encoding is de URL leesbaar in logs en de adresbalk).
    *
-   * Voorbeeld output voor 4 reizigers + Griekenland:
-   *   /vakantie/zoeken?DepartureDate[0]=2026-07-01&Duration[0]=8-11
+   * Voorbeeld output voor 4 reizigers + Turkije + hotel + all-inclusive:
+   *   /vakantie/zoeken?Country[0]=29&Duration[0]=8-11
    *     &Participants[0][0]=1996-05-26&Participants[0][1]=1996-05-26
    *     &Participants[1][0]=1996-05-26&Participants[1][1]=1996-05-26
-   *     &TransportType[0]=Flight&Country[0]=16
+   *     &AccommodationType[0]=HOTEL&Mealplan[0]=AI
+   *     &DepartureDate=2026-07-01&TransportType=Flight
+   *     &limit=10&offset=0&sort=Popularity&autoLoad=false
    */
   buildSearchUrl(query: SearchQuery): string {
-    const parts: string[] = [
-      "isFirstUserRequest=false",
-      "autoLoad=false",
-      `DepartureDate[0]=${DEPARTURE_DATE}`,
-      `Duration[0]=${DURATION_RANGE}`,
-    ];
+    const parts: string[] = [];
+
+    // Land — eerst zodat het de eerste param is (consistent met Sunweb output)
+    query.countries.forEach((country, i) => {
+      const id = COUNTRY_ID[country];
+      if (id) parts.push(`Country[${i}]=${id}`);
+    });
+
+    parts.push(`Duration[0]=${DURATION_RANGE}`);
 
     // Verdeel reizigers over kamers van max 2 personen (typisch package-deal patroon).
     const total = Math.max(1, query.travelers);
@@ -58,12 +86,22 @@ export const sunwebAdapter: AgencyAdapter = {
       remaining -= inRoom;
     }
 
-    parts.push("TransportType[0]=Flight");
+    // Optionele filters — alleen toevoegen als de keyword-zoekopdracht
+    // expliciet een type of catering noemt (uitbreidbaar zodra we de
+    // SearchQuery type uitbreiden met accommodationType/mealplan velden).
+    for (const kw of query.keywords) {
+      const accomCode = ACCOMMODATION_TYPE[kw.toLowerCase()];
+      if (accomCode) parts.push(`AccommodationType[0]=${accomCode}`);
+      const mealCode = MEALPLAN[kw.toLowerCase()];
+      if (mealCode) parts.push(`Mealplan[0]=${mealCode}`);
+    }
 
-    query.countries.forEach((country, i) => {
-      const id = COUNTRY_ID[country];
-      if (id) parts.push(`Country[${i}]=${id}`);
-    });
+    parts.push(`DepartureDate=${DEPARTURE_DATE}`);
+    parts.push("TransportType=Flight");
+    parts.push("limit=10");
+    parts.push("offset=0");
+    parts.push("sort=Popularity");
+    parts.push("autoLoad=false");
 
     return `https://www.sunweb.nl/vakantie/zoeken?${parts.join("&")}`;
   },

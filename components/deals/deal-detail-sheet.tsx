@@ -43,10 +43,11 @@ export function DealDetailSheet({ deals, travelers, rates }: DealDetailSheetProp
         {deal && (
           <>
             <SheetHeader className="space-y-3 border-b p-6">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{deal.provider}</Badge>
                 <Badge variant="secondary">{deal.type}</Badge>
                 <Badge variant="outline">{deal.catering}</Badge>
+                {deal.source === "user" && <SourceBadge createdVia={deal.createdVia} />}
               </div>
               <SheetTitle className="text-xl">{deal.title}</SheetTitle>
               <SheetDescription className="flex items-center gap-1">
@@ -145,7 +146,7 @@ export function DealDetailSheet({ deals, travelers, rates }: DealDetailSheetProp
                   <ExternalLink className="ml-2 size-4" />
                 </a>
               </Button>
-              {deal.ownedByMe && (
+              {deal.source === "user" && (
                 <DeleteDealButton dealId={deal.id} dealTitle={deal.title} />
               )}
             </div>
@@ -175,6 +176,31 @@ function Stat({
         {value}
       </span>
     </div>
+  );
+}
+
+function SourceBadge({ createdVia }: { createdVia?: Deal["createdVia"] }) {
+  if (createdVia === "bookmarklet") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-[#94adff] px-2 py-0.5 text-[11px] font-semibold text-[#1a2d5a]">
+        <Bookmark className="size-3" />
+        Via bookmarklet
+      </span>
+    );
+  }
+  if (createdVia === "link-paste") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-[#e8fd94] px-2 py-0.5 text-[11px] font-semibold text-[#1a2d5a]">
+        <Link2 className="size-3" />
+        Via link
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-[#e8fd94] px-2 py-0.5 text-[11px] font-semibold text-[#1a2d5a]">
+      <PenLine className="size-3" />
+      Eigen
+    </span>
   );
 }
 

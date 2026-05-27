@@ -6,6 +6,30 @@ import type { Deal, DealRatings } from "@/types/deal";
 
 type DealRow = Database["public"]["Tables"]["deals"]["Row"];
 
+/**
+ * Alleen user-submitted deals — wordt door runAgencySearch onvoorwaardelijk
+ * meegestuurd zodat eigen deals altijd zichtbaar zijn, ongeacht of de
+ * geselecteerde agency/country/budget filters matchen. Een eigen deal die je
+ * net toevoegde mag niet onzichtbaar zijn omdat de country casing afwijkt.
+ */
+export async function getUserSubmittedDeals(): Promise<Deal[]> {
+  const supabase = await supabaseServer();
+  if (!supabase) return [];
+
+  const [{ data, error }, { data: userData }] = await Promise.all([
+    supabase
+      .from("deals")
+      .select("*")
+      .eq("source", "user")
+      .order("created_at", { ascending: false }),
+    supabase.auth.getUser(),
+  ]);
+
+  if (error || !data) return [];
+  const myId = userData.user?.id ?? null;
+  return data.map((row) => rowToDeal(row, myId));
+}
+
 export async function getDeals(): Promise<Deal[]> {
   const supabase = await supabaseServer();
   if (!supabase) return seedDeals;

@@ -5,6 +5,7 @@ import { corendonAdapter } from "@/lib/agencies/corendon";
 import { byJuneAdapter } from "@/lib/agencies/byjune";
 import { prijsvrijAdapter } from "@/lib/agencies/prijsvrij";
 import { vakantiediscounterAdapter } from "@/lib/agencies/vakantiediscounter";
+import { getUserSubmittedDeals } from "@/lib/data";
 import type { AgencyAdapter } from "@/lib/agencies/types";
 import type { Deal } from "@/types/deal";
 import type {
@@ -27,10 +28,45 @@ const SEARCH_TIMEOUT_MS = 8_000;
 export async function runAgencySearch(
   query: SearchQuery
 ): Promise<SearchResponse> {
-  const results = await Promise.all(agencies.map((a) => runOne(a, query)));
+  // Parallel: alle agencies + alle eigen deals tegelijk.
+  const [agencyOutputs, userDeals] = await Promise.all([
+    Promise.all(agencies.map((a) => runOne(a, query))),
+    getUserSubmittedDeals(),
+  ]);
 
-  const deals: Deal[] = results.flatMap((r) => r.deals);
-  const agencyResults: AgencyResult[] = results.map((r) => r.result);
+  // Eigen deals worden ALTIJD getoond, ongeacht agency-filter, country-casing
+  // of budget — anders ben je je net-toegevoegde deal kwijt achter de filters.
+  // De client-side applyFilters/sortDeals doet het uiteindelijke weergave-filter.
+  // Dedupe via deal-id in geval een toekomstige live scrape hetzelfde item raakt.
+  const seen = new Set<string>();
+  const deals: Deal[] = [];
+  for (const r of agencyOutputs) {
+    for (const d of r.deals) {
+      if (!seen.has(d.id)) {
+        seen.add(d.id);
+        deals.push(d);
+      }
+    }
+  }
+  for (const d of userDeals) {
+    if (!seen.has(d.id)) {
+      seen.add(d.id);
+      deals.push(d);
+    }
+  }
+
+  const agencyResults: AgencyResult[] = agencyOutputs.map((r) => r.result);
+  // Zichtbare "Eigen" entry in de AgencyStatus zodat de user kan zien hoeveel
+  // van zijn eigen deals in de huidige weergave zitten.
+  if (userDeals.length > 0) {
+    agencyResults.push({
+      provider: "Eigen",
+      status: "ok",
+      count: userDeals.length,
+      durationMs: 0,
+      message: "Eigen toegevoegd via bookmarklet / link / handmatig",
+    });
+  }
 
   deals.sort((a, b) => a.pricePerPerson - b.pricePerPerson);
 

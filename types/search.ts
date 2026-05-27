@@ -10,7 +10,9 @@ export interface SearchQuery {
 export type AgencyStatus = "ok" | "fallback" | "error" | "skipped";
 
 export interface AgencyResult {
-  provider: Provider;
+  /** Provider naam OR een synthetische label voor virtuele "agencies" zoals
+   *  "Eigen" voor user-submitted deals. Daarom string in plaats van Provider. */
+  provider: Provider | string;
   status: AgencyStatus;
   count: number;
   durationMs: number;

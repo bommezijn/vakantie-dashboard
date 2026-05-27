@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryState } from "nuqs";
-import { ExternalLink, MapPin, Plane, Star } from "lucide-react";
+import { ExternalLink, MapPin, Plane, Star, Bookmark, Link2, PenLine } from "lucide-react";
 import {
   Sheet,
   SheetContent,

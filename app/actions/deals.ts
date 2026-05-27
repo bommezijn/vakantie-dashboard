@@ -34,12 +34,18 @@ export async function createUserDeal(input: CreateUserDealInput) {
 
   const id = `user-${userData.user.id.slice(0, 8)}-${Date.now()}`;
 
+  // Capitalize first letter zodat country exact matcht met curated seed-data
+  // ("Turkije" niet "turkije") — voorkomt dat user-deals verdwijnen achter
+  // case-sensitive country filter in runAgencySearch.
+  const country =
+    input.country.charAt(0).toUpperCase() + input.country.slice(1).toLowerCase();
+
   const { error } = await supabase.from("deals").insert({
     id,
     title: input.title,
     description: input.description,
     destination: input.destination,
-    country: input.country,
+    country,
     region: input.region,
     provider: input.provider,
     provider_url: input.providerUrl,

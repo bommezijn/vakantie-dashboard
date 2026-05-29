@@ -75,7 +75,7 @@ export function AddDealLinkForm() {
         }
         setMeta(data as ExtractedMeta);
         setOpen(true);
-      } catch (err) {
+      } catch {
         // Network / timeout errors: still open dialog with empty fields
         const fallback: ExtractedMeta = {
           title: "",

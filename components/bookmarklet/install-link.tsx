@@ -22,12 +22,11 @@ function buildBookmarklet(origin: string): string {
 }
 
 export function InstallLink() {
-  const [origin, setOrigin] = useState<string>("");
+  const [origin] = useState<string>(() => {
+    if (typeof window !== "undefined") return window.location.origin;
+    return "";
+  });
   const linkRef = useRef<HTMLAnchorElement>(null);
-
-  useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
 
   // React 16.9+ blokkeert javascript: URLs in href als security feature en
   // vervangt ze met een 'React has blocked...' error string. We omzeilen dat

@@ -51,6 +51,19 @@ export function DashboardShell({ initialResponse, rates }: DashboardShellProps) 
     [deals, state.budget]
   );
 
+  const filteredUserDealCount = useMemo(
+    () =>
+      applyFilters(deals, {
+        maxBudget: state.budget,
+        keywords: state.keywords,
+        providers: state.providers,
+        countries: state.countries,
+        showOverBudget: state.showOverBudget,
+        source: "user",
+      }).length,
+    [deals, state.budget, state.keywords, state.providers, state.countries, state.showOverBudget]
+  );
+
   const hasSearched = state.searched && initialResponse !== null;
 
   return (
@@ -77,7 +90,7 @@ export function DashboardShell({ initialResponse, rates }: DashboardShellProps) 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-[300px_1fr]">
               <aside className="lg:sticky lg:top-4 lg:h-[calc(100vh-6rem)]">
                 <ScrollArea className="lg:h-full">
-                  <FilterSidebar deals={deals} />
+                  <FilterSidebar deals={deals} filteredUserDealCount={filteredUserDealCount} />
                 </ScrollArea>
               </aside>
               <main className="flex flex-col gap-4">

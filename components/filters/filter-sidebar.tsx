@@ -15,14 +15,11 @@ import type { Deal } from "@/types/deal";
 
 interface FilterSidebarProps {
   deals: Deal[];
+  filteredUserDealCount: number;
 }
 
-export function FilterSidebar({ deals }: FilterSidebarProps) {
+export function FilterSidebar({ deals, filteredUserDealCount }: FilterSidebarProps) {
   const providers = useMemo(() => uniqueProviders(deals), [deals]);
-  const userDealCount = useMemo(
-    () => deals.filter((d) => d.source === "user").length,
-    [deals]
-  );
 
   return (
     <Card className="space-y-4 p-4">
@@ -33,7 +30,7 @@ export function FilterSidebar({ deals }: FilterSidebarProps) {
       <Separator />
       <SortSelect />
       <Separator />
-      <SourceFilter userDealCount={userDealCount} />
+      <SourceFilter userDealCount={filteredUserDealCount} />
       <Separator />
       <KeywordFilters />
       <Separator />

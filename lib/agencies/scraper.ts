@@ -5,6 +5,11 @@ const BROWSER_UA =
 
 const MAX_BYTES = 2_000_000;
 
+// Live scrapes 5 minuten cachen via Next's fetch-cache. Identieke zoekopdrachten
+// binnen dat venster hergebruiken het antwoord i.p.v. elk reisbureau opnieuw te
+// raken (sneller + minder kans op rate-limiting/blokkades).
+const REVALIDATE_SECONDS = 300;
+
 /**
  * Fetch an HTML page with a real browser UA — many travel sites silently hang
  * or return 403 for obvious bot UAs (axios/node-fetch defaults).
@@ -18,10 +23,10 @@ export async function fetchHtml(url: string, signal: AbortSignal): Promise<strin
       "user-agent": BROWSER_UA,
       accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       "accept-language": "nl-NL,nl;q=0.9,en;q=0.8",
-      "cache-control": "no-cache",
     },
     signal,
     redirect: "follow",
+    next: { revalidate: REVALIDATE_SECONDS },
   });
 
   if (!res.ok) throw new Error(`HTTP ${res.status}`);

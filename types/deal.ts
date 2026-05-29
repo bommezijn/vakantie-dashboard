@@ -66,4 +66,5 @@ export interface FilterState {
   countries: string[];
   showOverBudget: boolean;
   sortBy: SortKey;
+  source: "all" | "user" | "agency";
 }

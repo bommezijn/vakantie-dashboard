@@ -8,6 +8,7 @@ import {
   providersParser,
   showOverBudgetParser,
   sortParser,
+  sourceParser,
 } from "@/lib/search-params";
 
 export function ResetFilters() {
@@ -16,6 +17,7 @@ export function ResetFilters() {
     providers: providersParser,
     showOverBudget: showOverBudgetParser,
     sort: sortParser,
+    source: sourceParser,
   });
 
   return (
@@ -28,6 +30,7 @@ export function ResetFilters() {
           providers: null,
           showOverBudget: null,
           sort: null,
+          source: null,
         })
       }
       className="w-full justify-start text-muted-foreground hover:text-foreground"

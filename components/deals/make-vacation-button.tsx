@@ -5,6 +5,7 @@ import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { createPlanFromDeal } from "@/app/actions/vacation";
+import { SUPABASE_CONFIGURED } from "@/lib/supabase/config";
 
 interface MakeVacationButtonProps {
   dealId: string;
@@ -13,6 +14,9 @@ interface MakeVacationButtonProps {
 
 export function MakeVacationButton({ dealId, dealTitle }: MakeVacationButtonProps) {
   const [isPending, startTransition] = useTransition();
+
+  // Zonder database is er geen plek om het plan op te slaan.
+  if (!SUPABASE_CONFIGURED) return null;
 
   function onClick() {
     startTransition(async () => {

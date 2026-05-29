@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useQueryState } from "nuqs";
 import { ExternalLink, MapPin, Plane, Star, Bookmark, Link2, PenLine } from "lucide-react";
 import {
@@ -13,9 +14,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 import { dealParser } from "@/lib/search-params";
 import { formatPrice, formatLocal } from "@/lib/format";
 import { convertFromEur, currencyForCountry, type Rates } from "@/lib/currency";
+import { visualForCountry, emojiForType, normalizeImageUrl } from "@/lib/deal-visuals";
 import { MakeVacationButton } from "@/components/deals/make-vacation-button";
 import { DeleteDealButton } from "@/components/deals/delete-deal-button";
 import type { Deal } from "@/types/deal";
@@ -42,7 +45,8 @@ export function DealDetailSheet({ deals, travelers, rates }: DealDetailSheetProp
       <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-xl">
         {deal && (
           <>
-            <SheetHeader className="space-y-3 border-b p-6">
+            <DealBanner deal={deal} />
+            <SheetHeader className="space-y-3 border-b p-6 pt-4">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{deal.provider}</Badge>
                 <Badge variant="secondary">{deal.type}</Badge>
@@ -154,6 +158,46 @@ export function DealDetailSheet({ deals, travelers, rates }: DealDetailSheetProp
         )}
       </SheetContent>
     </Sheet>
+  );
+}
+
+/** Visuele banner bovenaan de sheet: echte foto indien aanwezig, anders een
+ *  gradient per land — consistent met de DealCard-header. */
+function DealBanner({ deal }: { deal: Deal }) {
+  const imageUrl = normalizeImageUrl(deal.imageUrl);
+  const visual = visualForCountry(deal.country);
+
+  if (imageUrl) {
+    return (
+      <div className="relative h-40 w-full shrink-0 overflow-hidden">
+        <Image
+          src={imageUrl}
+          alt={deal.title}
+          fill
+          className="object-cover"
+          sizes="(max-width: 640px) 100vw, 640px"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/70 to-transparent" />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "flex h-32 w-full shrink-0 items-center justify-between bg-gradient-to-br px-6",
+        visual.gradient
+      )}
+    >
+      <span className="text-5xl drop-shadow-sm" aria-hidden>
+        {emojiForType(deal.type)}
+      </span>
+      <span className="flex items-center gap-1.5 rounded-full bg-white/85 px-3 py-1 text-sm font-semibold text-slate-800 shadow-sm backdrop-blur-sm">
+        <span aria-hidden>{visual.emoji}</span>
+        {deal.country}
+      </span>
+    </div>
   );
 }
 

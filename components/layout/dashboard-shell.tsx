@@ -39,6 +39,7 @@ export function DashboardShell({ initialResponse, rates }: DashboardShellProps) 
           providers: state.providers,
           countries: state.countries,
           showOverBudget: state.showOverBudget,
+          source: state.source,
         }),
         state.sort
       ),

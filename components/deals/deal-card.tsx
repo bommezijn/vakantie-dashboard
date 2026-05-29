@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { dealParser } from "@/lib/search-params";
 import { formatPrice } from "@/lib/format";
+import { visualForCountry, emojiForType, normalizeImageUrl } from "@/lib/deal-visuals";
 import type { Deal } from "@/types/deal";
 
 interface DealCardProps {
@@ -31,8 +32,8 @@ export function DealCard({ deal, travelers, maxBudget }: DealCardProps) {
   const within = deal.pricePerPerson <= maxBudget;
   const margin = maxBudget - deal.pricePerPerson;
   const isUserDeal = deal.source === "user";
-  // Normalize protocol-relative URLs (//...) that some CDNs emit — Next/Image requires https://
-  const imageUrl = deal.imageUrl?.startsWith("//") ? `https:${deal.imageUrl}` : deal.imageUrl;
+  const imageUrl = normalizeImageUrl(deal.imageUrl);
+  const visual = visualForCountry(deal.country);
 
   return (
     <Card
@@ -43,20 +44,36 @@ export function DealCard({ deal, travelers, maxBudget }: DealCardProps) {
         isUserDeal && "border-l-[3px] border-l-[#e8fd94]"
       )}
     >
-      {/* Image strip — shown for user deals with an imageUrl */}
-      {isUserDeal && imageUrl && (
-        <div className="relative h-28 w-full overflow-hidden">
-          <Image
-            src={imageUrl}
-            alt={deal.title}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-          />
-          {/* Gradient overlay so text below remains readable */}
-          <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
-        </div>
-      )}
+      {/* Header strip — real image when available, anders een gradient per land */}
+      <div className="relative h-28 w-full overflow-hidden">
+        {imageUrl ? (
+          <>
+            <Image
+              src={imageUrl}
+              alt={deal.title}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
+          </>
+        ) : (
+          <div
+            className={cn(
+              "flex h-full w-full items-center justify-between bg-gradient-to-br px-4 transition-transform duration-300 group-hover:scale-105",
+              visual.gradient
+            )}
+          >
+            <span className="text-3xl drop-shadow-sm" aria-hidden>
+              {emojiForType(deal.type)}
+            </span>
+            <span className="flex items-center gap-1.5 rounded-full bg-white/85 px-2.5 py-1 text-xs font-semibold text-slate-800 shadow-sm backdrop-blur-sm">
+              <span aria-hidden>{visual.emoji}</span>
+              {deal.country}
+            </span>
+          </div>
+        )}
+      </div>
 
       <div className="flex items-start justify-between gap-3 p-4 pb-3">
         <div className="min-w-0 flex-1">

@@ -1,7 +1,15 @@
 "use client";
 
 import { useTransition } from "react";
-import { ExternalLink, MapPin, Trash2, CheckCircle2, Circle } from "lucide-react";
+import {
+  ExternalLink,
+  MapPin,
+  Trash2,
+  CheckCircle2,
+  Circle,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -9,6 +17,7 @@ import { formatLocal } from "@/lib/format";
 import {
   deleteActivity,
   toggleActivityReserved,
+  reorderActivities,
 } from "@/app/actions/vacation";
 import type { Database } from "@/types/database";
 
@@ -20,6 +29,8 @@ interface ActivityListProps {
 }
 
 export function ActivityList({ activities, planId }: ActivityListProps) {
+  const [isReordering, startReorder] = useTransition();
+
   if (activities.length === 0) {
     return (
       <div className="rounded-xl border-2 border-dashed border-muted-foreground/20 p-10 text-center">
@@ -30,10 +41,35 @@ export function ActivityList({ activities, planId }: ActivityListProps) {
     );
   }
 
+  function move(index: number, direction: -1 | 1) {
+    const target = index + direction;
+    if (target < 0 || target >= activities.length) return;
+
+    const reordered = activities.slice();
+    [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
+
+    startReorder(async () => {
+      try {
+        await reorderActivities(
+          planId,
+          reordered.map((a) => a.id)
+        );
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Volgorde wijzigen mislukt");
+      }
+    });
+  }
+
   return (
-    <div className="space-y-3">
-      {activities.map((a) => (
-        <ActivityCard key={a.id} activity={a} planId={planId} />
+    <div className={cn("space-y-3", isReordering && "pointer-events-none opacity-70")}>
+      {activities.map((a, i) => (
+        <ActivityCard
+          key={a.id}
+          activity={a}
+          planId={planId}
+          onMoveUp={i > 0 ? () => move(i, -1) : undefined}
+          onMoveDown={i < activities.length - 1 ? () => move(i, 1) : undefined}
+        />
       ))}
     </div>
   );
@@ -56,7 +92,17 @@ function domainLabel(url: string): string {
   }
 }
 
-function ActivityCard({ activity, planId }: { activity: ActivityRow; planId: string }) {
+function ActivityCard({
+  activity,
+  planId,
+  onMoveUp,
+  onMoveDown,
+}: {
+  activity: ActivityRow;
+  planId: string;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+}) {
   const [isPending, startTransition] = useTransition();
   const reserved = activity.is_reserved ?? false;
 
@@ -101,6 +147,28 @@ function ActivityCard({ activity, planId }: { activity: ActivityRow; planId: str
       />
 
       <div className="flex gap-4 p-4 pl-5">
+        {/* Reorder controls */}
+        {(onMoveUp || onMoveDown) && (
+          <div className="flex shrink-0 flex-col justify-center gap-0.5">
+            <button
+              onClick={onMoveUp}
+              disabled={!onMoveUp || isPending}
+              aria-label="Omhoog verplaatsen"
+              className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent"
+            >
+              <ChevronUp className="size-4" />
+            </button>
+            <button
+              onClick={onMoveDown}
+              disabled={!onMoveDown || isPending}
+              aria-label="Omlaag verplaatsen"
+              className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent"
+            >
+              <ChevronDown className="size-4" />
+            </button>
+          </div>
+        )}
+
         {/* Favicon / icon */}
         {activity.url ? (
           <div className="flex shrink-0 flex-col items-center gap-1.5 pt-0.5">

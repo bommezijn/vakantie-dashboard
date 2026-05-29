@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { KeywordFilters } from "@/components/filters/keyword-filters";
 import { ProviderFilter } from "@/components/filters/provider-filter";
+import { SourceFilter } from "@/components/filters/source-filter";
 import { SortSelect } from "@/components/filters/sort-select";
 import { OverBudgetToggle } from "@/components/filters/over-budget-toggle";
 import { ResetFilters } from "@/components/filters/reset-filters";
@@ -18,6 +19,10 @@ interface FilterSidebarProps {
 
 export function FilterSidebar({ deals }: FilterSidebarProps) {
   const providers = useMemo(() => uniqueProviders(deals), [deals]);
+  const userDealCount = useMemo(
+    () => deals.filter((d) => d.source === "user").length,
+    [deals]
+  );
 
   return (
     <Card className="space-y-4 p-4">
@@ -27,6 +32,8 @@ export function FilterSidebar({ deals }: FilterSidebarProps) {
       </div>
       <Separator />
       <SortSelect />
+      <Separator />
+      <SourceFilter userDealCount={userDealCount} />
       <Separator />
       <KeywordFilters />
       <Separator />

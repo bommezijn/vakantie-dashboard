@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Link as LinkIcon, Loader2 } from "lucide-react";
+import { Link as LinkIcon, Loader2, Plus, X, Database } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import {
   Dialog,
@@ -16,7 +15,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { DealFormFields } from "@/components/deals/deal-form-fields";
 import { createUserDeal } from "@/app/actions/deals";
+import { SUPABASE_CONFIGURED, NO_DATABASE_MESSAGE } from "@/lib/supabase/config";
 
 interface ExtractedMeta {
   title: string;
@@ -27,22 +28,37 @@ interface ExtractedMeta {
   siteName: string;
 }
 
-const PROVIDERS = ["TUI", "Sunweb", "Corendon", "ByJune", "Anders"];
-const TYPES = ["villa", "appartement", "hotel", "aparthotel", "all-inclusive"];
-const CATERING = ["logies", "ontbijt", "halfpension", "all-inclusive"];
-
 export function AddDealLinkForm() {
+  const [expanded, setExpanded] = useState(false);
   const [url, setUrl] = useState("");
   const [isExtracting, startExtract] = useTransition();
   const [isSubmitting, startSubmit] = useTransition();
   const [meta, setMeta] = useState<ExtractedMeta | null>(null);
   const [open, setOpen] = useState(false);
 
+  // Geen database → toon een uitlegregel i.p.v. een formulier dat tóch crasht.
+  if (!SUPABASE_CONFIGURED) {
+    return (
+      <Card className="flex items-center gap-2 p-3 text-xs text-muted-foreground">
+        <Database className="size-4 shrink-0" />
+        {NO_DATABASE_MESSAGE}
+      </Card>
+    );
+  }
+
   function onExtract(e: React.FormEvent) {
     e.preventDefault();
     if (!url.trim()) return;
 
     startExtract(async () => {
+      const fallback: ExtractedMeta = {
+        title: "",
+        description: "",
+        image: "",
+        providerUrl: url.trim(),
+        provider: "Anders",
+        siteName: "",
+      };
       try {
         const res = await fetch("/api/extract-link", {
           method: "POST",
@@ -51,18 +67,8 @@ export function AddDealLinkForm() {
         });
         const data = await res.json();
         if (!res.ok) {
-          // Open the dialog anyway so the user can fill in details manually
-          const fallback: ExtractedMeta = {
-            title: "",
-            description: "",
-            image: "",
-            providerUrl: url.trim(),
-            provider: "Anders",
-            siteName: "",
-          };
           setMeta(fallback);
           setOpen(true);
-          // Show a contextual warning based on the status code
           const msg: string = data.error ?? "Extractie mislukt";
           const isForbidden = msg.includes("403") || msg.includes("401");
           toast.warning(
@@ -76,19 +82,10 @@ export function AddDealLinkForm() {
         setMeta(data as ExtractedMeta);
         setOpen(true);
       } catch {
-        // Network / timeout errors: still open dialog with empty fields
-        const fallback: ExtractedMeta = {
-          title: "",
-          description: "",
-          image: "",
-          providerUrl: url.trim(),
-          provider: "Anders",
-          siteName: "",
-        };
         setMeta(fallback);
         setOpen(true);
         toast.warning(
-          `Pagina kon niet worden opgehaald — vul de details handmatig in.`,
+          "Pagina kon niet worden opgehaald — vul de details handmatig in.",
           { duration: 6000 }
         );
       }
@@ -128,6 +125,7 @@ export function AddDealLinkForm() {
         setOpen(false);
         setMeta(null);
         setUrl("");
+        setExpanded(false);
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Toevoegen mislukt");
       }
@@ -136,27 +134,77 @@ export function AddDealLinkForm() {
 
   return (
     <>
-      <Card className="p-3">
-        <form onSubmit={onExtract} className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Label htmlFor="add-deal-url" className="shrink-0 text-sm">
-            <LinkIcon className="size-4" />
-            Voeg vakantie toe via link
-          </Label>
-          <Input
-            id="add-deal-url"
-            type="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://www.tui.nl/vakantie/..."
-            className="flex-1"
-            disabled={isExtracting}
-          />
-          <Button type="submit" disabled={isExtracting || !url.trim()}>
-            {isExtracting ? <Loader2 className="mr-1 size-4 animate-spin" /> : null}
-            {isExtracting ? "Bezig..." : "Ophalen"}
+      {!expanded ? (
+        <div className="flex justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setExpanded(true)}
+            className="gap-1.5"
+          >
+            <Plus className="size-4" />
+            Zelf een vakantie toevoegen
           </Button>
-        </form>
-      </Card>
+        </div>
+      ) : (
+        <Card className="p-3">
+          <form onSubmit={onExtract} className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Label htmlFor="add-deal-url" className="shrink-0 text-sm">
+              <LinkIcon className="size-4" />
+              Voeg vakantie toe via link
+            </Label>
+            <Input
+              id="add-deal-url"
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://www.tui.nl/vakantie/..."
+              className="flex-1"
+              disabled={isExtracting}
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <Button type="submit" disabled={isExtracting || !url.trim()}>
+                {isExtracting ? <Loader2 className="mr-1 size-4 animate-spin" /> : null}
+                {isExtracting ? "Bezig..." : "Ophalen"}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Sluiten"
+                onClick={() => {
+                  setExpanded(false);
+                  setUrl("");
+                }}
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
+          </form>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Of vul direct handmatig in zonder URL via{" "}
+            <button
+              type="button"
+              className="underline underline-offset-2 hover:text-foreground"
+              onClick={() => {
+                setMeta({
+                  title: "",
+                  description: "",
+                  image: "",
+                  providerUrl: "",
+                  provider: "Anders",
+                  siteName: "",
+                });
+                setOpen(true);
+              }}
+            >
+              dit formulier
+            </button>
+            .
+          </p>
+        </Card>
+      )}
 
       <Dialog
         open={open}
@@ -171,132 +219,21 @@ export function AddDealLinkForm() {
             <DialogDescription>
               {meta?.title
                 ? "Velden zijn gevuld uit de pagina-metadata. Vul de ontbrekende reisdetails aan."
-                : "De website kon niet automatisch worden uitgelezen. Vul de reisdetails handmatig in."}
+                : "Vul de reisdetails in. Velden met * zijn verplicht."}
             </DialogDescription>
           </DialogHeader>
 
           {meta && (
             <form action={onSubmit} className="grid max-h-[60vh] gap-3 overflow-y-auto pr-1">
-              <div className="grid gap-1.5">
-                <Label htmlFor="title">Titel *</Label>
-                <Input id="title" name="title" defaultValue={meta.title} required />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="description">Beschrijving</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  rows={2}
-                  defaultValue={meta.description}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="grid gap-1.5">
-                  <Label htmlFor="provider">Aanbieder</Label>
-                  <select
-                    id="provider"
-                    name="provider"
-                    defaultValue={meta.provider}
-                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
-                  >
-                    {PROVIDERS.map((p) => (
-                      <option key={p} value={p}>
-                        {p}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="providerUrl">URL</Label>
-                  <Input
-                    id="providerUrl"
-                    name="providerUrl"
-                    type="url"
-                    defaultValue={meta.providerUrl}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="grid gap-1.5">
-                  <Label htmlFor="country">Land *</Label>
-                  <Input id="country" name="country" required placeholder="bv. Turkije" />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="region">Regio</Label>
-                  <Input id="region" name="region" placeholder="bv. Side" />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="flightTime">Vluchttijd</Label>
-                  <Input id="flightTime" name="flightTime" placeholder="bv. 4h 10m" />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="grid gap-1.5">
-                  <Label htmlFor="pricePerPerson">Prijs p.p. (€) *</Label>
-                  <Input
-                    id="pricePerPerson"
-                    name="pricePerPerson"
-                    type="number"
-                    min="1"
-                    required
-                  />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="duration">Duur (dagen) *</Label>
-                  <Input
-                    id="duration"
-                    name="duration"
-                    type="number"
-                    min="1"
-                    required
-                    defaultValue="11"
-                  />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="startDate">Vertrek</Label>
-                  <Input
-                    id="startDate"
-                    name="startDate"
-                    type="date"
-                    defaultValue="2026-07-01"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="grid gap-1.5">
-                  <Label htmlFor="type">Type</Label>
-                  <select
-                    id="type"
-                    name="type"
-                    defaultValue="hotel"
-                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
-                  >
-                    {TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="catering">Catering</Label>
-                  <select
-                    id="catering"
-                    name="catering"
-                    defaultValue="logies"
-                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
-                  >
-                    {CATERING.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <input type="hidden" name="imageUrl" defaultValue={meta.image} />
+              <DealFormFields
+                defaults={{
+                  title: meta.title,
+                  description: meta.description,
+                  provider: meta.provider,
+                  providerUrl: meta.providerUrl,
+                  imageUrl: meta.image,
+                }}
+              />
 
               <DialogFooter className="mt-2">
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>

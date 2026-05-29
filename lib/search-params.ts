@@ -50,6 +50,16 @@ export const searchedParser = parseAsBoolean
   .withDefault(false)
   .withOptions({ clearOnDefault: true });
 
+export type SourceFilter = "all" | "user" | "agency";
+
+export const sourceParser = parseAsStringEnum<SourceFilter>([
+  "all",
+  "user",
+  "agency",
+])
+  .withDefault("all")
+  .withOptions({ clearOnDefault: true });
+
 export const dealParser = parseAsString;
 
 export const filterParsers = {
@@ -60,5 +70,6 @@ export const filterParsers = {
   countries: countriesParser,
   showOverBudget: showOverBudgetParser,
   sort: sortParser,
+  source: sourceParser,
   searched: searchedParser,
 };

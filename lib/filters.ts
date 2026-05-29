@@ -5,10 +5,12 @@ export function applyFilters(
   deals: Deal[],
   state: Pick<
     FilterState,
-    "maxBudget" | "keywords" | "providers" | "countries" | "showOverBudget"
+    "maxBudget" | "keywords" | "providers" | "countries" | "showOverBudget" | "source"
   >
 ): Deal[] {
   return deals.filter((d) => {
+    if (state.source === "user" && d.source !== "user") return false;
+    if (state.source === "agency" && d.source === "user") return false;
     if (!state.showOverBudget && d.pricePerPerson > state.maxBudget) return false;
     if (state.keywords.length > 0 && !state.keywords.every((k) => d.keywords.includes(k)))
       return false;

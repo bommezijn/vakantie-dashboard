@@ -236,7 +236,7 @@ function CountrySelect({
             onClick={() => setOpen(false)}
             aria-hidden
           />
-          <div className="absolute left-0 right-0 top-full z-50 mt-2 rounded-md border bg-popover p-2 shadow-md">
+          <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-[min(20rem,50vh)] w-full max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-md border bg-popover p-2 shadow-md">
             <ToggleGroup
               type="multiple"
               value={value}

@@ -97,3 +97,27 @@ export async function deleteActivity(activityId: string, planId: string) {
 
   revalidatePath(`/mijn-vakantie/${planId}`);
 }
+
+/**
+ * Herschrijft sort_order voor alle activiteiten van een plan naar hun index in
+ * `orderedIds`. Robuust ongeacht of bestaande rijen al een sort_order hadden —
+ * de client stuurt simpelweg de volledige nieuwe volgorde mee.
+ */
+export async function reorderActivities(planId: string, orderedIds: string[]) {
+  const supabase = await supabaseServer();
+  if (!supabase) throw new Error("Supabase not configured");
+
+  const updates = orderedIds.map((id, index) =>
+    supabase
+      .from("vacation_activities")
+      .update({ sort_order: index })
+      .eq("id", id)
+      .eq("vacation_plan_id", planId)
+  );
+
+  const results = await Promise.all(updates);
+  const failed = results.find((r) => r.error);
+  if (failed?.error) throw new Error(failed.error.message);
+
+  revalidatePath(`/mijn-vakantie/${planId}`);
+}

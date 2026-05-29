@@ -16,10 +16,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createBlankPlan } from "@/app/actions/vacation";
+import { SUPABASE_CONFIGURED } from "@/lib/supabase/config";
 
 export function NewPlanButton() {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  // Geen database → een plan aanmaken kan niet. Toon een uitgeschakelde knop
+  // met uitleg i.p.v. een dialog die bij submit crasht.
+  if (!SUPABASE_CONFIGURED) {
+    return (
+      <Button disabled title="Vereist een gekoppelde database">
+        <Plus className="mr-1 size-4" />
+        Nieuw plan
+      </Button>
+    );
+  }
 
   function onSubmit(formData: FormData) {
     const name = String(formData.get("name") ?? "").trim();

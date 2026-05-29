@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { seedDeals } from "@/data/seed-deals";
 import { supabaseServer } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
@@ -30,7 +31,13 @@ export async function getUserSubmittedDeals(): Promise<Deal[]> {
   return data.map((row) => rowToDeal(row, myId));
 }
 
-export async function getDeals(): Promise<Deal[]> {
+// Per-request gememoïseerd met React cache(): één zoekopdracht roept dit via
+// filterSeedForProvider 6× aan (één per reisbureau-adapter). Zonder cache zou
+// dat 6 identieke Supabase round-trips zijn; nu delen ze allemaal één fetch
+// binnen dezelfde request. Cross-request live caching gebeurt op fetch-niveau
+// in lib/agencies/scraper.ts (next.revalidate) — getDeals leest auth-cookies
+// en kan daarom niet globaal via unstable_cache gecached worden.
+export const getDeals = cache(async (): Promise<Deal[]> => {
   const supabase = await supabaseServer();
   if (!supabase) return seedDeals;
 
@@ -45,7 +52,7 @@ export async function getDeals(): Promise<Deal[]> {
 
   const myId = userData.user?.id ?? null;
   return data.map((row) => rowToDeal(row, myId));
-}
+});
 
 // Runtime trust: provider/type/catering string columns are constrained at write-time
 // (seed script + future INSERT policy) to the literal unions in types/deal.ts.
